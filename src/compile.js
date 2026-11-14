@@ -17,6 +17,10 @@ function Compiler (filename, st, flags, canSuspend, sourceCodeForAnnotation) {
     this.flags = flags;
     this.canSuspend = canSuspend;
     this.interactive = false;
+    // printLastExpr: if the main module ends with an expression statement,
+    // show its repr like the IDLE shell does (set by Sk.compile).
+    this.printLastExpr = false;
+    this.lastExprStmt = null;
     this.nestlevel = 0;
 
     this.u = null;
@@ -2705,7 +2709,14 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
         case Sk.astnodes.Global:
             break;
         case Sk.astnodes.Expr:
-            this.vexpr(s.value);
+            val = this.vexpr(s.value);
+            if (s === this.lastExprStmt) {
+                // print(repr(value)) unless the value is None
+                out("$ret = (", val, " === Sk.builtin.none.none$) ? undefined : ",
+                    "Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(Sk.builtins['repr'], [", val, "]), ",
+                    "function ($r) { return Sk.misceval.callsimOrSuspendArray(Sk.builtins['print'], [$r]); });");
+                this._checkSuspension(s);
+            }
             break;
         case Sk.astnodes.Pass:
             break;
@@ -2956,7 +2967,8 @@ Compiler.prototype.cbody = function (stmts, class_for_super) {
     const maybeDocstring = this.maybeCDocstringOfBody(stmts);
     if (maybeDocstring !== null) {
         out("$loc.__doc__ = ", maybeDocstring, ";");
-        i = 1;
+        // a lone string that is also the shown last expression is still shown
+        i = (stmts.length === 1 && stmts[0] === this.lastExprStmt) ? 0 : 1;
     }
 
     for (; i < stmts.length; ++i) {
@@ -3049,6 +3061,10 @@ Compiler.prototype.cmod = function (mod) {
 
     switch (mod.constructor) {
         case Sk.astnodes.Module:
+            if (this.printLastExpr && mod.body.length > 0 &&
+                mod.body[mod.body.length - 1].constructor === Sk.astnodes.Expr) {
+                this.lastExprStmt = mod.body[mod.body.length - 1];
+            }
             this.cbody(mod.body);
             out("return $loc;");
             break;
@@ -3066,8 +3082,9 @@ Compiler.prototype.cmod = function (mod) {
  * @param {string} filename where it came from
  * @param {string} mode one of 'exec', 'eval', or 'single'
  * @param {boolean=} canSuspend if the generated code supports suspension
+ * @param {boolean=} printLastExpr print repr of a final expression statement (main module only)
  */
-Sk.compile = function (source, filename, mode, canSuspend) {
+Sk.compile = function (source, filename, mode, canSuspend, printLastExpr) {
     //print("FILE:", filename);
     // __future__ flags can be set from code
     // (with "from __future__ import ..." statements),
@@ -3085,6 +3102,7 @@ Sk.compile = function (source, filename, mode, canSuspend) {
 
     var st = Sk.symboltable(ast, filename);
     var c = new Compiler(filename, st, flags.cf_flags, canSuspend, source); // todo; CO_xxx
+    c.printLastExpr = !!printLastExpr;
     var funcname = c.cmod(ast);
 
     // Restore the global __future__ flags

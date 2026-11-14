@@ -4,16 +4,27 @@ on:
   push:
     branches: "*"
     tags-ignore: "v*"
+  workflow_dispatch:
 jobs:
   unit-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: "12.x"
+          # webpack 4 needs Node <= 16 (OpenSSL md4)
+          node-version: "16.x"
       - run: npm ci
       - run: npm run build
       - run: npm test
-      
+      - name: Build size
+        run: |
+          ls -l dist
+          for f in dist/skulpt.min.js dist/skulpt-stdlib.js; do echo "$f gzip: $(gzip -9 -c $f | wc -c)"; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skulpt-dist
+          path: |
+            dist/skulpt.min.js
+            dist/skulpt-stdlib.js

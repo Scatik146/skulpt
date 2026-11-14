@@ -1,3 +1,20 @@
+# Ветка `zhivoj-konspekt` — Skulpt для «Живого конспекта»
+
+Это форк [step-in-dev/skulpt](https://github.com/step-in-dev/skulpt) (сам он — форк [skulpt/skulpt](https://github.com/skulpt/skulpt), лицензия MIT, файл `LICENSE` сохранён). Ветка `zhivoj-konspekt` — Python для редактора [«Живой конспект»](https://github.com/Scatik146/zhivoj-konspekt); ветка `develop` оставлена как у StepInDev.
+
+Что изменено в ветке:
+- **Значение последнего выражения** (Python-режим, как в оболочке IDLE): `Sk.configure({printLastExpr: true})` — если главная программа кончается выражением (`2 + 3`, `s.upper()`, `f()`), выводится его `repr`; `None` не выводится. Касается только главной программы (`__main__`), не импортируемых модулей; по умолчанию выключено — без опции Skulpt ведёт себя как раньше. Правка — `src/compile.js`, `src/env.js`, `src/import.js`.
+- Тест `test/test_printlastexpr.js` (входит в `npm test`).
+- CI (`.github/workflows/test.yml`): Node 16, сборка, тесты, размеры сборки, готовые `dist/skulpt.min.js` и `dist/skulpt-stdlib.js` — в артефакте `skulpt-dist` запуска.
+
+От StepInDev унаследовано: убран `jseval` (программа ученика не выполняет JavaScript), ввод через `Sk.inputfun`, Черепаха.
+
+Сборка: `npm ci && npm run build && npm test` (Node ≤ 16).
+
+Дальше по плану: модуль `ipaddress` (для задач ЕГЭ на IP-адреса), проверка на реальных задачах ЕГЭ.
+
+---
+
 # Welcome to Skulpt
 
 [![Join the chat at https://gitter.im/skulpt/skulpt](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/skulpt/skulpt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

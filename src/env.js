@@ -148,6 +148,10 @@ Sk.configure = function (options) {
     Sk.retainGlobals = options["retainglobals"] || options["retainGlobals"] || false;
     Sk.asserts.assert(typeof Sk.retainGlobals === "boolean");
 
+    // Python mode of «Живой конспект»: show the value of the last expression
+    Sk.printLastExpr = options["printLastExpr"] || options["printlastexpr"] || false;
+    Sk.asserts.assert(typeof Sk.printLastExpr === "boolean");
+
     Sk.debugging = options["debugging"] || false;
     Sk.asserts.assert(typeof Sk.debugging === "boolean");
 

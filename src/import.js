@@ -157,7 +157,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
 
             if (typeof suppliedPyBody === "string") {
                 filename = name + ".py";
-                co = Sk.compile(suppliedPyBody, filename, "exec", canSuspend);
+                co = Sk.compile(suppliedPyBody, filename, "exec", canSuspend, Sk.printLastExpr && modname === "__main__");
             } else {
                 co = Sk.misceval.chain(undefined, function() {
                     // If an onBeforeImport method is supplied, call it and if
@@ -188,7 +188,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
                         return Sk.misceval.chain(Sk.importSearchPathForName(searchFileName, ".py", searchPath), function(codeAndPath_) {
                             codeAndPath = codeAndPath_; // We'll want it in a moment
                             if (codeAndPath) {
-                                return Sk.compile(codeAndPath.code, codeAndPath.filename, "exec", canSuspend);
+                                return Sk.compile(codeAndPath.code, codeAndPath.filename, "exec", canSuspend, Sk.printLastExpr && modname === "__main__");
                             }
                         }, function(co) {
                             if (co) {
